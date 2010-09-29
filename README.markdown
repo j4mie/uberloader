@@ -21,7 +21,7 @@ Let's See Some Code
 
 ### Setup ###
 
-Setting up Überloader is quite simple. Simple copy the `uberloader.php` file to somewhere into your project directory and include it:
+Setting up Überloader is quite simple. Simply copy the `uberloader.php` file to somewhere into your project directory and include it:
 
 `require_once 'your/path/to/uberloader.php';`
 
