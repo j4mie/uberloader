@@ -6,7 +6,7 @@
     *
     * http://github.com/j4mie/uberloader/
     *
-    * A brute-force caching autoloader for PHP5.
+    * A brute-force autoloader for PHP5.
     *
     * BSD Licensed.
     *
