@@ -42,9 +42,9 @@ That's it!
 
 #### tl;dr ####
 
-`require_once 'your/path/to/uberloader.php';`
-`$loader = new Uberloader(dirname(__FILE__), dirname(__FILE__) . "/cache/");`
-`$loader->register();`
+    require_once 'your/path/to/uberloader.php';
+    $loader = new Uberloader(dirname(__FILE__), dirname(__FILE__) . "/cache/");
+    $loader->register();
 
 #### Disabling the cache ####
 
