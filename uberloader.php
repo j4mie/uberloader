@@ -120,7 +120,7 @@
          * @see __construct
          */
         public static function init($base_directory, $cache_directory, $file_types=array('php')) {
-            $loader = new self($base_directory, $cache_directory, $file_types=array('php'));
+            $loader = new self($base_directory, $cache_directory, $file_types);
             $loader->register();
             return $loader;
         }
