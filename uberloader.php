@@ -210,7 +210,11 @@
          */
         protected function _write_cache() {
             if ($this->_cache_enabled) {
-                file_put_contents($this->_cache_file, json_encode($this->_cache));
+                file_put_contents(
+                    $this->_cache_file,
+                    json_encode($this->_cache),
+                    LOCK_EX
+                );
             }
         }
 
