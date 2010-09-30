@@ -45,6 +45,7 @@ That's it!
 Überloader provides a static convenience method called `init` that instantiates and registers the loader. It takes the same arguments as the class constructor:
 
 `require_once 'your/path/to/uberloader.php';`
+
 `Uberloader::init(dirname(__FILE__), dirname(__FILE__) . "/cache/");`
 
 #### Disabling the cache ####
