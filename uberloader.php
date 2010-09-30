@@ -113,6 +113,19 @@
         }
 
         /**
+         * Extra convenient static method to instantiate
+         * and register Überloader. Takes the same arguments
+         * as the class constructor.
+         *
+         * @see __construct
+         */
+        public static function init($base_directory, $cache_directory, $file_types=array('php')) {
+            $loader = new self($base_directory, $cache_directory, $file_types=array('php'));
+            $loader->register();
+            return $loader;
+        }
+
+        /**
          * Called when this Überloader instance is destroyed.
          * Writes the path cache to the cache file
          */

@@ -40,11 +40,12 @@ Register the autoloader. Überloader provides a helper method to do this:
 
 That's it!
 
-#### tl;dr ####
+### Convenience method ###
 
-    require_once 'your/path/to/uberloader.php';
-    $loader = new Uberloader(dirname(__FILE__), dirname(__FILE__) . "/cache/");
-    $loader->register();
+Überloader provides a static convenience method called `init` that instantiates and registers the loader. It takes the same arguments as the class constructor:
+
+`require_once 'your/path/to/uberloader.php';
+`Uberloader::init(dirname(__FILE__), dirname(__FILE__) . "/cache/");
 
 #### Disabling the cache ####
 
