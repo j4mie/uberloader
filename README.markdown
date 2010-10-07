@@ -25,14 +25,16 @@ Setting up Überloader is quite simple. Copy the `uberloader.php` file to somewh
 
 `require_once 'your/path/to/uberloader.php';`
 
-Create an instance of the `Uberloader` class. The constructor takes three arguments:
+Create an instance of the `Uberloader` class. The constructor takes two arguments:
 
-1. The base directory to search inside. This is usually the root directory of your project.
-2. The directory in which to store the path cache. This directory must exist and must be writable by the web server.
-3. [Optional] An array of extensions for the files to be searched. This defaults to `array('php')`.
+1. The directory in which to store the path cache. This directory must exist and must be writable by the web server.
+2. [Optional] An array of extensions for the files to be searched. This defaults to `array('php')`.
 
+`$loader = new Uberloader(dirname(__FILE__) . "/cache/");`
 
-`$loader = new Uberloader(dirname(__FILE__), dirname(__FILE__) . "/cache/");`
+Add a path to be searched for classes:
+
+`$loader->add_path(dirname(__FILE__));`
 
 Register the autoloader. Überloader provides a helper method to do this:
 
@@ -42,11 +44,19 @@ That's it!
 
 ### Convenience method ###
 
-Überloader provides a static convenience method called `init` that instantiates and registers the loader. It takes the same arguments as the class constructor:
+Überloader provides a static convenience method called `init` that instantiates and registers the loader. It is suitable for simple use cases where only one path will be searched. It takes three arguments. The first is the name of the path to search. The second two are the same at the main class constructor.
 
 `require_once 'your/path/to/uberloader.php';`
 
 `Uberloader::init(dirname(__FILE__), dirname(__FILE__) . "/cache/");`
+
+### Advanced ###
+
+#### Multiple search paths ####
+
+You can add multiple paths for Überloader to search by calling the `add_path` method more than once. The paths you supply will be searched in the order they are added.
+
+This feature allows you to easily implement something like Kohana's [cascading filesystem](http://kohanaframework.org/guide/about.filesystem]). Just add the search paths in a sensible order (for example: your application first, then custom modules, then the system path) and Überloader will load whichever class it finds first.
 
 #### Disabling the cache ####
 

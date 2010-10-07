@@ -40,8 +40,8 @@
 
         const CACHE_FILE_NAME = "uberloader_cache.json";
 
-        // Location to start the search, usually the root of the application
-        protected $_base_directory;
+        // Directories to search. These will be searched in order.
+        protected $_paths_to_search = array();
 
         // File containing the path cache
         protected $_cache_file;
@@ -59,19 +59,25 @@
         /**
          * Create a new instance of the Überloader.
          *
-         * @param string $base_directory The base directory to search from, usually the root of the application
          * @param string $cache_directory The directory in which to store the path cache
          * @param array $file_type Array of file extensions containing your PHP code
          */
-        public function __construct($base_directory, $cache_directory, $file_types=array('php')) {
+        public function __construct($cache_directory, $file_types=array('php')) {
             $cache_directory = realpath($cache_directory);
             if (!is_writable($cache_directory)) {
                 throw new UberloaderException("Cache directory does not exist or is not writable");
             }
 
-            $this->_base_directory = realpath($base_directory);
             $this->_file_types = $file_types;
             $this->_cache_file = $cache_directory . '/' . self::CACHE_FILE_NAME;
+        }
+
+        /**
+         * Add a path to search for classes. This must be called at least once
+         * before Uberloader is used, or an exception will be thrown.
+         */
+        public function add_path($path) {
+            $this->_paths_to_search[] = realpath($path);
         }
 
         /**
@@ -94,7 +100,14 @@
                 require_once $cached_path;
                 return;
             }
-            $result = $this->_search($this->_base_directory, $class_name);
+
+            foreach ($this->_paths_to_search as $path) {
+                $result = $this->_search($path, $class_name);
+
+                if ($result !== false) {
+                    break;
+                }
+            }
 
             if ($result === false) {
                 return false;
@@ -109,18 +122,24 @@
          * Register this class as an autoloader
          */
         public function register() {
+            if (empty($this->_paths_to_search)) {
+                throw new UberloaderException("No search paths defined");
+            }
             spl_autoload_register(array($this, 'load'));
         }
 
         /**
          * Extra convenient static method to instantiate
-         * and register Überloader. Takes the same arguments
-         * as the class constructor.
+         * and register Überloader with one base path.
          *
-         * @see __construct
+         * @param string $base_directory The base directory to search from, usually the root of the application
+         * @param string $cache_directory The directory in which to store the path cache
+         * @param array $file_type Array of file extensions containing your PHP code
+         *
          */
         public static function init($base_directory, $cache_directory, $file_types=array('php')) {
-            $loader = new self($base_directory, $cache_directory, $file_types);
+            $loader = new self($cache_directory, $file_types);
+            $loader->add_path($base_directory);
             $loader->register();
             return $loader;
         }
