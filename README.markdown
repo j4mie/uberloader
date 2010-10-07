@@ -56,7 +56,7 @@ That's it!
 
 You can add multiple paths for Überloader to search by calling the `add_path` method more than once. The paths you supply will be searched in the order they are added.
 
-This feature allows you to easily implement something like Kohana's [cascading filesystem](http://kohanaframework.org/guide/about.filesystem]). Just add the search paths in a sensible order (for example: your application first, then custom modules, then the system path) and Überloader will load whichever class it finds first.
+This feature allows you to easily implement something like Kohana's [cascading filesystem](http://kohanaframework.org/guide/about.filesystem). Just add the search paths in a sensible order (for example: your application first, then custom modules, then the system path) and Überloader will load whichever class it finds first.
 
 #### Disabling the cache ####
 
