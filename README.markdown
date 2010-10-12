@@ -77,9 +77,11 @@ This feature allows you to easily implement something like Kohana's [cascading f
 
 #### Disabling the cache ####
 
-During development, you may wish to disable the path cache. This mean that the whole directory tree will be searched each and every time a class is loaded, so **make sure you re-enable the cache in production**. To do this, simply set the cache backend to be an instance of the supplied `UberloaderCacheBackendDummy`.
+During development, you may wish to disable the path cache. To do this, simply set the cache backend to be an instance of the supplied `UberloaderCacheBackendDummy`.
 
 `$loader->set_cache_backend(new UberloaderCacheBackendDummy());`
+
+Disabling the cache means that the whole directory tree will be searched each and every time a class is loaded, so **make sure you re-enable the cache in production**.
 
 #### Implementing custom cache backends ####
 
