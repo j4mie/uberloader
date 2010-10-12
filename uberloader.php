@@ -136,7 +136,6 @@
 
         /**
          * Called when this Überloader instance is destroyed.
-         * Writes the path cache to the cache file
          */
         public function __destruct() {
             $this->_cache_backend->teardown();
@@ -192,7 +191,6 @@
      * Interface for an Uberloader cache backend
      */
     interface UberloaderCacheBackend {
-
 
         /**
          * Get the given key from the cache
