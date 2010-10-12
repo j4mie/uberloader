@@ -38,23 +38,15 @@
 
     class Uberloader {
 
-        const CACHE_FILE_NAME = "uberloader_cache.json";
 
         // Directories to search. These will be searched in order.
         protected $_paths_to_search = array();
 
-        // File containing the path cache
-        protected $_cache_file;
+        // The cache backend to use for path lookup
+        protected $_cache_backend = null;
 
         // Array of file extensions to search
         protected $_file_types;
-
-        // The path cache
-        protected $_cache = null;
-
-        // Is the path cache enabled?
-        // Might be useful to set this to false in development
-        protected $_cache_enabled = true;
 
         /**
          * Create a new instance of the Überloader.
@@ -62,14 +54,8 @@
          * @param string $cache_directory The directory in which to store the path cache
          * @param array $file_type Array of file extensions containing your PHP code
          */
-        public function __construct($cache_directory, $file_types=array('php')) {
-            $cache_directory = realpath($cache_directory);
-            if (!is_writable($cache_directory)) {
-                throw new UberloaderException("Cache directory does not exist or is not writable");
-            }
-
+        public function __construct($file_types=array('php')) {
             $this->_file_types = $file_types;
-            $this->_cache_file = $cache_directory . '/' . self::CACHE_FILE_NAME;
         }
 
         /**
@@ -81,12 +67,12 @@
         }
 
         /**
-         * Enable or disable the path cache
+         * Set the cache backend instance to use to store paths
          *
-         * @param boolean $enabled should the cache be enabled or disabled?
+         * @param UberloaderCacheBackend $backend the backend to use
          */
-        public function set_cache_enabled($enabled) {
-            $this->_cache_enabled = $enabled;
+        public function set_cache_backend(UberloaderCacheBackend $backend) {
+            $this->_cache_backend = $backend;
         }
 
         /**
@@ -95,7 +81,7 @@
          * @param string $class_name the class name to find
          */
         public function load($class_name) {
-            $cached_path = $this->_check_cache($class_name);
+            $cached_path = $this->_cache_backend->get($class_name);
             if ($cached_path !== false) {
                 require_once $cached_path;
                 return;
@@ -113,7 +99,7 @@
                 return false;
             }
 
-            $this->_add_to_cache($class_name, $result);
+            $this->_cache_backend->set($class_name, $result);
             require_once $result;
             return;
         }
@@ -122,6 +108,9 @@
          * Register this class as an autoloader
          */
         public function register() {
+            if (is_null($this->_cache_backend)) {
+                throw new UberloaderException("No cache backend set");
+            }
             if (empty($this->_paths_to_search)) {
                 throw new UberloaderException("No search paths defined");
             }
@@ -130,15 +119,16 @@
 
         /**
          * Extra convenient static method to instantiate
-         * and register Überloader with one base path.
+         * and register Überloader with one base path and a
+         * filesystem-based cache backend.
          *
          * @param string $base_directory The base directory to search from, usually the root of the application
          * @param string $cache_directory The directory in which to store the path cache
-         * @param array $file_type Array of file extensions containing your PHP code
          *
          */
-        public static function init($base_directory, $cache_directory, $file_types=array('php')) {
-            $loader = new self($cache_directory, $file_types);
+        public static function init($base_directory, $cache_directory) {
+            $loader = new self();
+            $loader->set_cache_backend(new UberloaderCacheBackendFilesystem($cache_directory));
             $loader->add_path($base_directory);
             $loader->register();
             return $loader;
@@ -149,7 +139,7 @@
          * Writes the path cache to the cache file
          */
         public function __destruct() {
-            $this->_write_cache();
+            $this->_cache_backend->teardown();
         }
 
         /**
@@ -196,12 +186,58 @@
             $success = preg_match($pattern, $contents);
             return $success === 1;
         }
+    }
+
+    /**
+     * Interface for an Uberloader cache backend
+     */
+    interface UberloaderCacheBackend {
+
 
         /**
-         * Load the path cache from the cache file
+         * Get the given key from the cache
+         *
+         * @param $key the key whose value should be retrieved
+         * @return string or false
          */
-        protected function _load_cache() {
-            if ($this->_cache_enabled && file_exists($this->_cache_file)) {
+        public function get($key);
+
+        /**
+         * Set a cache entry
+         *
+         * @param string $key the key to set
+         * @param string $value to the value to store at the given key
+         */
+        public function set($key, $value);
+
+        /**
+         * Destroy the cache. Called once just before the request ends.
+         * This may write the cache file to disc etc.
+         */
+        public function teardown();
+    }
+
+    /**
+     * Class to implement filesystem-based caching
+     */
+    class UberloaderCacheBackendFilesystem implements UberloaderCacheBackend {
+
+        const CACHE_FILE_NAME = "uberloader_cache.json";
+
+        protected $_cache_directory;
+        protected $_cache_file;
+        protected $_cache;
+
+        public function __construct($cache_directory) {
+            $cache_directory = realpath($cache_directory);
+            if (!is_writable($cache_directory)) {
+                throw new UberloaderException("Cache directory does not exist or is not writable");
+            }
+            $this->_cache_directory = $cache_directory;
+            $this->_cache_file = $cache_directory . '/' . self::CACHE_FILE_NAME;
+
+            // Set up the cache
+            if (file_exists($this->_cache_file)) {
                 $contents = file_get_contents($this->_cache_file);
                 $this->_cache = json_decode($contents, true);
             } else {
@@ -209,42 +245,32 @@
             }
         }
 
-        /**
-         * Check the cache for the given class name
-         *
-         * @param string $class_name the class name to check
-         */
-        protected function _check_cache($class_name) {
-            if (is_null($this->_cache)) {
-                $this->_load_cache();
-            }
-            if ($this->_cache_enabled && isset($this->_cache[$class_name])) {
-                return $this->_cache[$class_name];
-            }
+        public function get($key) {
+            return isset($this->_cache[$key]) ? $this->_cache[$key] : false;
+        }
+
+        public function set($key, $value) {
+            $this->_cache[$key] = $value;
+        }
+
+        public function teardown() {
+            file_put_contents($this->_cache_file, json_encode($this->_cache), LOCK_EX);
+        }
+    }
+
+    /**
+     * Dummy cache backend; returns false for all keys.
+     * Shouldn't be used in production.
+     */
+    class UberloaderCacheBackendDummy implements UberloaderCacheBackend {
+        public function get($key) {
             return false;
         }
 
-        /**
-         * Write the cache to the cache file
-         */
-        protected function _write_cache() {
-            if ($this->_cache_enabled) {
-                file_put_contents(
-                    $this->_cache_file,
-                    json_encode($this->_cache),
-                    LOCK_EX
-                );
-            }
+        public function set($key, $value) {
         }
 
-        /**
-         * Write the given path to the path cache
-         *
-         * @param string $class_name the class name
-         * @param string $path the path of the file containing the class definition
-         */
-        protected function _add_to_cache($class_name, $path) {
-            $this->_cache[$class_name] = $path;
+        public function teardown() {
         }
     }
 

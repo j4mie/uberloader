@@ -19,38 +19,55 @@ It's not pretty, it's not clean, but it works.
 Let's See Some Code
 -------------------
 
-### Setup ###
+### Concepts ###
 
-Setting up Überloader is quite simple. Copy the `uberloader.php` file to somewhere into your project directory and include it:
+Überloader has two core concepts, *search paths* and *cache backends*. Search paths are directories to look for files containing class definitions. Cache backends are interfaces to store file paths so they won't need to be searched again. Überloader ships with two simple cache backends; these are discussed below.
+
+### Installation ###
+
+Copy the `uberloader.php` file to somewhere into your project directory and `require` it:
 
 `require_once 'your/path/to/uberloader.php';`
 
-Create an instance of the `Uberloader` class. The constructor takes two arguments:
+### Minimal setup: convenience method ###
 
-1. The directory in which to store the path cache. This directory must exist and must be writable by the web server.
-2. [Optional] An array of extensions for the files to be searched. This defaults to `array('php')`.
-
-`$loader = new Uberloader(dirname(__FILE__) . "/cache/");`
-
-Add a path to be searched for classes:
-
-`$loader->add_path(dirname(__FILE__));`
-
-Register the autoloader. Überloader provides a helper method to do this:
-
-`$loader->register();`
-
-That's it!
-
-### Convenience method ###
-
-Überloader provides a static convenience method called `init` that instantiates and registers the loader. It is suitable for simple use cases where only one path will be searched. It takes three arguments. The first is the name of the path to search. The second two are the same at the main class constructor.
+Überloader provides a static convenience method called `init` that instantiates and registers the loader. It is suitable for simple use cases where only one path will be searched, and the basic filesystem cache backend will be used. It takes two arguments. The first is the name of the path to start the recursive search, and the second is the directory in which to store the cache file.
 
 `require_once 'your/path/to/uberloader.php';`
 
 `Uberloader::init(dirname(__FILE__), dirname(__FILE__) . "/cache/");`
 
-### Advanced ###
+That's it!
+
+### Manual setup ###
+
+Setting up Überloader manually is quite simple. First, create an instance of the `Uberloader` class:
+
+`$loader = new Uberloader();`
+
+Next, we need to create a cache backend. Überloader ships with a simple filesystem-based cache backend. The constructor for this backend takes one argument: the directory in which to store the cache file.
+
+`$backend = new UberloaderCacheBackendFilesystem(dirname(__FILE__) . "/cache/");`
+
+You should then tell Überloader to use this backend:
+
+`$loader->set_cache_backend($backend);`
+
+Then, add a path to be searched for classes. This is usually the root directory of your application:
+
+`$loader->add_path(dirname(__FILE__));`
+
+Finally, register the autoloader. Überloader provides a helper method to do this:
+
+`$loader->register();`
+
+Done.
+
+### Advanced setup ###
+
+#### Specifying file extensions to search ####
+
+Überloader's constructor takes a single optional argument: an array of file extensions to search. This defaults to `array('php')`, so any files ending in `.php` will be searched.
 
 #### Multiple search paths ####
 
@@ -60,6 +77,24 @@ This feature allows you to easily implement something like Kohana's [cascading f
 
 #### Disabling the cache ####
 
-During development, you may wish to disable the path cache. This mean that the whole directory tree will be searched each and every time a class is loaded, so **make sure you re-enable the cache in production**.
+During development, you may wish to disable the path cache. This mean that the whole directory tree will be searched each and every time a class is loaded, so **make sure you re-enable the cache in production**. To do this, simply set the cache backend to be an instance of the supplied `UberloaderCacheBackendDummy`.
 
-`$loader->set_cache_enabled(false);`
+`$loader->set_cache_backend(new UberloaderCacheBackendDummy());`
+
+#### Implementing custom cache backends ####
+
+You may wish to create your own custom cache backend (for example, to store cached class paths in [Memcached](http://memcached.org/) or [Redis](http://redis.io/)). Your cache backend classes should implement the `UberloaderCacheBackend` interface, which requires that they supply three methods: `get($key)`, `set($key, $value)` and `teardown()`. The latter is called once at the end of the request and may be used to perform and necessary cleanup of your cache or connection. Of course, you may also implement a constructor to initialise your cache and any other necessary helper methods.
+
+    class MyCustomCacheBackend implements UberloaderCacheBackend {
+        public function get($key) {
+            // get the value for the specified key from your cache
+        }
+
+        public function set($key, $value) {
+            // Set the given value in your cache at the specified key
+        }
+
+        public function teardown() {
+            // Disconnect or save the cache
+        }
+    }
