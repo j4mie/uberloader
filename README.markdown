@@ -21,7 +21,7 @@ Let's See Some Code
 
 ### Concepts ###
 
-Überloader has two core concepts, *search paths* and *cache backends*. Search paths are directories to look for files containing class definitions. Cache backends are interfaces to store file paths so they won't need to be searched again. Überloader ships with two simple cache backends; these are discussed below.
+Überloader has two core concepts, *search paths* and *cache backends*. Search paths are directories in which to look for files containing class definitions. Cache backends are interfaces to store file paths so they won't need to be searched again. Überloader ships with two simple cache backends; these are discussed below.
 
 ### Installation ###
 
@@ -31,7 +31,7 @@ Copy the `uberloader.php` file to somewhere into your project directory and `req
 
 ### Minimal setup: convenience method ###
 
-Überloader provides a static convenience method called `init` that instantiates and registers the loader. It is suitable for simple use cases where only one path will be searched, and the basic filesystem cache backend will be used. It takes two arguments. The first is the name of the path to start the recursive search, and the second is the directory in which to store the cache file.
+Überloader provides a static convenience method called `init` that instantiates and registers the loader. It is suitable for simple use cases where only one path will be searched, and the basic filesystem cache backend will be used. It takes two arguments. The first is the name of the path at which to start the recursive search, and the second is the directory in which to store the cache file.
 
 `Uberloader::init(dirname(__FILE__), dirname(__FILE__) . "/cache/");`
 
@@ -83,7 +83,7 @@ Disabling the cache means that the whole directory tree will be searched each an
 
 #### Implementing custom cache backends ####
 
-You may wish to create your own custom cache backend (for example, to store cached class paths in [Memcached](http://memcached.org/) or [Redis](http://redis.io/)). Your cache backend classes should implement the `UberloaderCacheBackend` interface, which requires that they supply three methods: `get($key)`, `set($key, $value)` and `teardown()`. The latter is called once at the end of the request and may be used to perform and necessary cleanup of your cache or connection. Of course, you may also implement a constructor to initialise your cache and any other necessary helper methods.
+You may wish to create your own custom cache backend (for example, to store cached class paths in [Memcached](http://memcached.org/) or [Redis](http://redis.io/)). Your cache backend class should implement the `UberloaderCacheBackend` interface, which requires that it supplies three methods: `get($key)`, `set($key, $value)` and `teardown()`. The latter is called once at the end of the request and may be used to perform and necessary cleanup of your cache or connection. Of course, you may also implement a constructor to initialise your cache and any other necessary helper methods.
 
     class MyCustomCacheBackend implements UberloaderCacheBackend {
         public function get($key) {
