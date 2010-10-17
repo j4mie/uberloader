@@ -33,8 +33,6 @@ Copy the `uberloader.php` file to somewhere into your project directory and `req
 
 Überloader provides a static convenience method called `init` that instantiates and registers the loader. It is suitable for simple use cases where only one path will be searched, and the basic filesystem cache backend will be used. It takes two arguments. The first is the name of the path to start the recursive search, and the second is the directory in which to store the cache file.
 
-`require_once 'your/path/to/uberloader.php';`
-
 `Uberloader::init(dirname(__FILE__), dirname(__FILE__) . "/cache/");`
 
 That's it!
