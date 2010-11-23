@@ -195,8 +195,9 @@
                 }
 
                 // First element in the array is the token type.
-                // Check if this is a T_CLASS token (the string "class").
-                if ($current_token[0] === T_CLASS) {
+                // Check if this is a T_CLASS token (the string "class")
+                // or a T_INTERFACE token (the string "interface").
+                if (in_array($current_token[0], array(T_CLASS, T_INTERFACE))) {
 
                     // The immediate next token is whitespace. The one
                     // after that represents the class name.
