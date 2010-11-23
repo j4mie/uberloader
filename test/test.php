@@ -12,7 +12,7 @@
     $loader->register();
 
     function test_load_class($classname) {
-        if (class_exists($classname)) {
+        if (class_exists($classname) || interface_exists($classname)) {
             TestReporter::report_pass($classname);
         } else {
             TestReporter::report_failure($classname);
@@ -23,5 +23,6 @@
     test_load_class('BracketOnNextLine');
     test_load_class('ClassWithSuperclass');
     test_load_class('ClassWithInterface');
+    test_load_class('InterfaceTest');
 
     TestReporter::summary();
