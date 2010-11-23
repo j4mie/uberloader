@@ -174,16 +174,49 @@
 
         /**
          * Check a file to see if it contains a class definition
-         * for the given class.
+         * for the given class. This uses PHP's source parsing to
+         * tokenise the file and identify the correct parts of the
+         * code. This is probably quite slow, but should be robust.
          *
          * @param string $file_path the file to check
-         * @param string £target_class_name the class name to find
+         * @param string $target_class_name the class name to find
          */
         protected function _check_file($file_path, $target_class_name) {
-            $pattern = "/class {$target_class_name}[\s{]/";
+
             $contents = file_get_contents($file_path);
-            $success = preg_match($pattern, $contents);
-            return $success === 1;
+            $tokens = token_get_all($contents);
+
+            for ($index=0; $index < count($tokens); $index++) {
+                $current_token = $tokens[$index];
+
+                // Some tokens (eg semicolons, brackets)
+                // are just strings. Ignore these.
+                if (!is_array($current_token)) {
+                    continue;
+                }
+
+                // First element in the array is the token type.
+                // Check if this is a T_CLASS token (the string "class").
+                if ($current_token[0] === T_CLASS) {
+
+                    // The immediate next token is whitespace. The one
+                    // after that represents the class name.
+                    $classname_token_index = $index + 2;
+
+                    // Check it is a valid token
+                    if (isset($tokens[$classname_token_index]) && is_array($tokens[$classname_token_index])) {
+
+                        // The second element in the token array
+                        // is the contents of the token.
+                        $classname = $tokens[$classname_token_index][1];
+
+                        // See if we've found the class we're looking for
+                        if ($classname === $target_class_name) {
+                            return true;
+                        }
+                    }
+                }
+            }
         }
     }
 
