@@ -99,7 +99,6 @@
                 return false;
             }
 
-            $this->_cache_backend->set($class_name, $result);
             require_once $result;
             return;
         }
@@ -209,6 +208,10 @@
                         // The second element in the token array
                         // is the contents of the token.
                         $classname = $tokens[$classname_token_index][1];
+
+                        // Whether or not this is the class we're looking for,
+                        // we can now add this class to the cache.
+                        $this->_cache_backend->set($classname, $file_path);
 
                         // See if we've found the class we're looking for
                         if ($classname === $target_class_name) {
