@@ -215,7 +215,7 @@
                         $this->_cache_backend->set($classname, $file_path);
 
                         // See if we've found the class we're looking for
-                        if ($classname === $target_class_name) {
+                        if (strtolower($classname) === strtolower($target_class_name)) {
                             return true;
                         }
                     }

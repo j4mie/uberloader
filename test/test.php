@@ -24,5 +24,7 @@
     test_load_class('ClassWithSuperclass');
     test_load_class('ClassWithInterface');
     test_load_class('InterfaceTest');
+    test_load_class('InterfaceTest');
+    test_load_class('LOWERCASECLASSNAME');
 
     TestReporter::summary();
