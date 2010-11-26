@@ -81,6 +81,7 @@
          * @param string $class_name the class name to find
          */
         public function load($class_name) {
+            $class_name = strtolower($class_name);
             $cached_path = $this->_cache_backend->get($class_name);
             if ($cached_path !== false) {
                 require_once $cached_path;
@@ -208,14 +209,14 @@
 
                         // The second element in the token array
                         // is the contents of the token.
-                        $classname = $tokens[$classname_token_index][1];
+                        $classname = strtolower($tokens[$classname_token_index][1]);
 
                         // Whether or not this is the class we're looking for,
                         // we can now add this class to the cache.
                         $this->_cache_backend->set($classname, $file_path);
 
                         // See if we've found the class we're looking for
-                        if (strtolower($classname) === strtolower($target_class_name)) {
+                        if ($classname == $target_class_name) {
                             return true;
                         }
                     }
