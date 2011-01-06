@@ -26,5 +26,6 @@
     test_load_class('InterfaceTest');
     test_load_class('InterfaceTest');
     test_load_class('LOWERCASECLASSNAME');
+    test_load_class('Abcdef\ClassInNamespace');
 
     TestReporter::summary();
