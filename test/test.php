@@ -26,6 +26,10 @@
     test_load_class('InterfaceTest');
     test_load_class('InterfaceTest');
     test_load_class('LOWERCASECLASSNAME');
-    test_load_class('Abcdef\ClassInNamespace');
+
+    // Only run this test if namespaces are supported (ie PHP5.3)
+    if (defined('T_NAMESPACE')) {
+        test_load_class('Abcdef\ClassInNamespace');
+    }
 
     TestReporter::summary();
