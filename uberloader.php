@@ -185,6 +185,7 @@
 
             $contents = file_get_contents($file_path);
             $tokens = token_get_all($contents);
+            $namespace = '';
 
             for ($index=0; $index < count($tokens); $index++) {
                 $current_token = $tokens[$index];
@@ -193,6 +194,19 @@
                 // are just strings. Ignore these.
                 if (!is_array($current_token)) {
                     continue;
+                }
+
+                // If namespaces are supported in this version of
+                // PHP (ie PHP5.3) then look for T_NAMESPACE tokens.
+                if (defined('T_NAMESPACE') && $current_token[0] == T_NAMESPACE) {
+                    $n = 2;
+
+                    while (isset($tokens[$index + $n]) && is_array($tokens[$index + $n])) {
+                        $namespace .= $tokens[$index + $n][1];
+                        $n++;
+                    }
+
+                    $namespace .= '\\';
                 }
 
                 // First element in the array is the token type.
@@ -209,7 +223,7 @@
 
                         // The second element in the token array
                         // is the contents of the token.
-                        $classname = strtolower($tokens[$classname_token_index][1]);
+                        $classname = strtolower($namespace . $tokens[$classname_token_index][1]);
 
                         // Whether or not this is the class we're looking for,
                         // we can now add this class to the cache.
