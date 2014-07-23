@@ -307,6 +307,107 @@
             file_put_contents($this->_cache_file, json_encode($this->_cache), LOCK_EX);
         }
     }
+    
+    /**
+ * Class to implement Memcache-based system
+ */
+   class UberloaderCacheBackendMemcached implements UberloaderCacheBackend {
+
+    protected $memcache;
+    protected $_cache_bin = 'uberloader:';
+    protected $_cache_bucket = array();
+
+    /**
+     * @param Array $memcache_config
+     *  array(
+     *   'servers' => array(
+     *       array('localhost', '11211')
+     *    )
+     *    'bin' => 'uberloader_'
+     *  );
+     *
+     * @throws UberloaderException
+     */
+    public function __construct($memcache_config) {
+
+        $this->memcache = new Memcache();
+
+        $servers = $memcache_config['servers'];
+
+        if (isset($memcache_config['bin'])) {
+            $this->_cache_bin = $memcache_config['bin'];
+        }
+
+        $connected = false;
+
+        if (is_array($servers)) {
+            foreach ($servers as $s) {
+                $s['port'] =  isset($s['port']) && is_long($s['port'])
+                    ? $s['port'] : 11211;
+
+                if ($this->memcache->addserver($s['host'], $s['port'])) {
+                    $connected = true;
+                };
+            }
+        } else {
+            throw new UberloaderException("No memcache server defined.");
+        }
+
+        if ($connected == false) {
+            throw new UberloaderException("Couldn't connect to memcache servers.");
+        }
+    }
+
+    /**
+     * Internal method used to create the key name.
+     *
+     * @param $key
+     * @return string
+     */
+    protected function _key($key) {
+        return $this->_cache_bin . $key;
+    }
+
+    /**
+     * Retrieves a class path from memcached.
+     *
+     * @param the $key
+     * @return array|bool|string
+     */
+    public function get($key) {
+        $key = $this->_key($key);
+        if (isset($this->_cache_bucket[$key])) {
+            return $this->_cache_bucket[$key];
+        } else {
+            if ($value = $this->memcache->get($key)) {
+                $this->_cache_bucket[$key] = $value;
+                return $value;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Adds a class path to memcached.
+     *
+     * @param string $key
+     * @param string $value
+     */
+    public function set($key, $value) {
+        $key = $this->_key($key);
+        $this->_cache_bucket[$key] = $value;
+    }
+
+    /**
+     * Saves the current cache to memcached.
+     */
+    public function teardown() {
+        foreach ($this->_cache_bucket as $key => $value) {
+            $this->memcache->set($key, $value);
+        }
+    }
+
+}
 
     /**
      * Dummy cache backend; returns false for all keys.
